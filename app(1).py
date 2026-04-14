@@ -28,8 +28,24 @@ unique_users = df['user_key'].nunique()
 unique_author_sets = df['author_set'].nunique()
 
 # most popular author
+# top_author = (
+#     df.groupby('author')['quantity']
+#     .sum()
+#     .sort_values(ascending=False)
+#     .head(1)
+# )
+
+# most popular author
+authors_df = df.copy()
+
+authors_df['author'] = authors_df['author'].astype(str).str.split(',') #if i guessed it correctly, to get a proper authors i need to break the col into list
+
+authors_df = authors_df.explode('author')
+
+authors_df['author'] = authors_df['author'].str.strip()
+
 top_author = (
-    df.groupby('author')['quantity']
+    authors_df.groupby('author')['quantity']
     .sum()
     .sort_values(ascending=False)
     .head(1)

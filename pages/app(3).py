@@ -27,6 +27,7 @@ unique_users = df['user_key'].nunique()
 # authors (unique)
 unique_author_sets = df['author_set'].nunique()
 
+
 # most popular author
 
 # authors_df = df.copy()
@@ -44,29 +45,29 @@ unique_author_sets = df['author_set'].nunique()
 #     .head(1)
 # )
 
-clean_authors = (
-    df['author']
-    .fillna('')
-    .astype(str)
-    .str.lower()
-    .str.replace(r'\s+', ' ', regex=True)
-    .str.strip()
-)
+# clean author's list
+def normalize_authors(author_str):
+    authors = str(author_str).lower().split(',')
+    authors = [a.strip() for a in authors if a.strip()]
+    authors = sorted(set(authors))
+    return ', '.join(authors)
 
-d = clean_authors.str.get_dummies(sep=',')
+df['author_clean'] = df['author'].apply(normalize_authors)
 
-d.columns = d.columns.str.strip()
-
+# setting top by quantity
 top_author = (
-    d.mul(df['quantity'], axis=0)
-    .div(d.sum(axis=1), axis=0)
+    df.groupby('author_clean')['quantity']
     .sum()
     .sort_values(ascending=False)
-    .head(5)
-    .rename('total_sales')
+    .head(1)
     .reset_index()
-    .rename(columns={'index': 'author'})
+    .rename(columns={
+        'author_clean': 'author',
+        'quantity': 'total_sales'
+    })
 )
+st.subheader("Most popular author / author group")
+st.dataframe(top_author, hide_index=True)
 
 # best costumer
 best_costumer = (
@@ -99,9 +100,9 @@ with col4:
     st.subheader("Top 5 days by revenue")
     st.dataframe(top5_days)
 
-with col5:
-    st.subheader("Most popular author")
-    st.dataframe(top_author)
+# with col5:
+#     st.subheader("Most popular author")
+#     st.dataframe(top_author)
 
 # chart
 st.subheader("Daily revenue")

@@ -36,19 +36,43 @@ unique_author_sets = df['author_set'].nunique()
 # )
 
 # most popular author
-authors_df = df.copy()
+# authors_df = df.copy()
 
-authors_df['author'] = authors_df['author'].astype(str).str.split(',') #if i guessed it correctly, to get a proper authors i need to break the col into list
+# authors_df['author'] = authors_df['author'].astype(str).str.split(',') #if i guessed it correctly, to get a proper authors i need to break the col into list
 
-authors_df = authors_df.explode('author')
+# authors_df = authors_df.explode('author')
 
-authors_df['author'] = authors_df['author'].str.strip()
+# authors_df['author'] = authors_df['author'].str.strip()
+
+# top_author = (
+#     authors_df.groupby('author')['quantity']
+#     .sum()
+#     .sort_values(ascending=False)
+#     .head(1)
+# )
+
+clean_authors = (
+    df['author']
+    .fillna('')
+    .astype(str)
+    .str.lower()
+    .str.replace(r'\s+', ' ', regex=True)
+    .str.strip()
+)
+
+d = clean_authors.str.get_dummies(sep=',')
+
+d.columns = d.columns.str.strip()
 
 top_author = (
-    authors_df.groupby('author')['quantity']
+    d.mul(df['quantity'], axis=0)
+    .div(d.sum(axis=1), axis=0)
     .sum()
     .sort_values(ascending=False)
-    .head(1)
+    .head(5)
+    .rename('total_sales')
+    .reset_index()
+    .rename(columns={'index': 'author'})
 )
 
 # best costumer
